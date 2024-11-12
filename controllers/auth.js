@@ -35,7 +35,7 @@ exports.usersList = async (req, res) => {
 // userController.js
 
 exports.createUser = async (req, res) => {
-  const { email, password, displayName, phoneNumber } = req.body;
+  const { uid, email, password, displayName, phoneNumber } = req.body;
 
   try {
     const userRecord = await admin.auth().createUser({

@@ -39,6 +39,7 @@ exports.createUser = async (req, res) => {
 
   try {
     const userRecord = await admin.auth().createUser({
+      uid,
       email,
       password,
       displayName,

@@ -60,13 +60,15 @@ exports.createUser = async (req, res) => {
 
 // userController.js
 exports.updateUser = async (req, res) => {
-  const { userId, email, displayName, phoneNumber } = req.body;
+  const { uid, email, displayName, phoneNumber, password, disabled } = req.body;
 
   try {
-    const userRecord = await admin.auth().updateUser(userId, {
+    const userRecord = await admin.auth().updateUser(uid, {
       email,
+      password,
       displayName,
       phoneNumber,
+      disabled,
     });
     res.status(200).json({
       message: 'User updated successfully',

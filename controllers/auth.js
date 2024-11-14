@@ -51,6 +51,7 @@ exports.createUser = async (req, res) => {
     const newUser = new User({
       uid: userRecord.uid, // Firebase UID
       email: userRecord.email,
+      password: userRecord.password,
       displayName: userRecord.displayName || '',
       phoneNumber: userRecord.phoneNumber || '',
       role: role || 'subscriber', // Default role if not provided

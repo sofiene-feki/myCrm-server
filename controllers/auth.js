@@ -35,20 +35,39 @@ exports.usersList = async (req, res) => {
 // userController.js
 
 exports.createUser = async (req, res) => {
-  const { uid, email, password, displayName, phoneNumber } = req.body;
+  const { email, password, displayName, phoneNumber, role } = req.body;
 
   try {
+    // Create user in Firebase Authentication
     const userRecord = await admin.auth().createUser({
-      uid,
       email,
       password,
       displayName,
       phoneNumber,
       disabled: false,
     });
+
+    // Prepare user data for MongoDB
+    const newUser = new User({
+      uid: userRecord.uid, // Firebase UID
+      email: userRecord.email,
+      displayName: userRecord.displayName || '',
+      phoneNumber: userRecord.phoneNumber || '',
+      role: role || 'subscriber', // Default role if not provided
+      emailVerified: userRecord.emailVerified,
+      disabled: userRecord.disabled,
+      photoURL: userRecord.photoURL || '',
+    });
+
+    // Save the user in MongoDB
+    await newUser.save();
+
     res.status(201).json({
-      message: 'User created successfully',
-      userId: userRecord.uid,
+      message: 'User created successfully in Firebase and MongoDB',
+      user: {
+        uid: userRecord.uid,
+        email: userRecord.email,
+      },
     });
   } catch (error) {
     res.status(400).json({

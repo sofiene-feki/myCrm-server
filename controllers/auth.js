@@ -29,35 +29,34 @@ exports.currentUser = async (req, res) => {
 
 exports.usersList = async (req, res) => {
   res.json(await User.find({}).sort({ createdAt: -1 }).exec());
-  console.log(res);
 };
 
 // userController.js
 
 exports.createUser = async (req, res) => {
-  const { email, password, displayName, phoneNumber, role } = req.body;
+  const { email, password, displayName, phoneNumber, role, uid, disabled } =
+    req.body;
 
   try {
     // Create user in Firebase Authentication
+    console.log(req.body);
     const userRecord = await admin.auth().createUser({
+      uid,
       email,
       password,
       displayName,
       phoneNumber,
-      disabled: false,
+      disabled,
     });
 
     // Prepare user data for MongoDB
     const newUser = new User({
-      uid: userRecord.uid, // Firebase UID
-      email: userRecord.email,
-      password: userRecord.password,
-      displayName: userRecord.displayName || '',
-      phoneNumber: userRecord.phoneNumber || '',
-      role: role || 'subscriber', // Default role if not provided
-      emailVerified: userRecord.emailVerified,
-      disabled: userRecord.disabled,
-      photoURL: userRecord.photoURL || '',
+      uid,
+      email,
+      displayName,
+      phoneNumber,
+      disabled,
+      role,
     });
 
     // Save the user in MongoDB
@@ -80,9 +79,11 @@ exports.createUser = async (req, res) => {
 
 // userController.js
 exports.updateUser = async (req, res) => {
-  const { uid, email, displayName, phoneNumber, password, disabled } = req.body;
+  const { uid, email, displayName, phoneNumber, password, disabled, role } =
+    req.body;
 
   try {
+    // Update user in Firebase Authentication
     const userRecord = await admin.auth().updateUser(uid, {
       email,
       password,
@@ -90,13 +91,51 @@ exports.updateUser = async (req, res) => {
       phoneNumber,
       disabled,
     });
+
+    // Update user data in MongoDB
+    const updatedUser = await User.findOneAndUpdate(
+      { uid },
+      { email, displayName, phoneNumber, disabled, role },
+      { new: true }
+    );
+
     res.status(200).json({
-      message: 'User updated successfully',
-      userId: userRecord.uid,
+      message: 'User updated successfully in Firebase and MongoDB',
+      user: {
+        uid: userRecord.uid,
+        email: userRecord.email,
+        displayName: userRecord.displayName,
+      },
     });
   } catch (error) {
     res.status(400).json({
       message: 'Error updating user',
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  const { uid } = req.params; // Assuming the UID is passed as a route parameter
+
+  try {
+    // Delete user from Firebase
+    await admin.auth().deleteUser(uid);
+
+    // Delete user from MongoDB
+    const deletedUser = await User.findOneAndDelete({ uid });
+    if (!deletedUser) {
+      return res.status(404).json({
+        message: 'User not found in MongoDB',
+      });
+    }
+
+    res.status(200).json({
+      message: 'User successfully deleted from Firebase and MongoDB',
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: 'Error deleting user',
       error: error.message,
     });
   }

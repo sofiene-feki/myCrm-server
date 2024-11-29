@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      //required: true,
     },
     photoURL: {
       type: String,
@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
     uid: {
       type: String,
       unique: true,
-      required: true,
+      // required: true,
     },
   },
   { timestamps: true }
